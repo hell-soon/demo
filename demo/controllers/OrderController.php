@@ -7,6 +7,8 @@ use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use app\models\OrderStatus;
+use Yii;
 
 /**
  * OrderController implements the CRUD actions for Order model.
@@ -103,9 +105,19 @@ class OrderController extends Controller
     {
         $model = $this->findModel($id);
 
+        $oldStatus = OrderStatus::find()->where(['id' => $model->status_id])->one()->name;
+
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            $newStatus = OrderStatus::find()->where(['id' => $model->status_id])->one()->name;
+
+            if ($oldStatus != $newStatus) {
+                Yii::$app->session->setFlash('changeStatus', 'Статус заявки измене на ' . $newStatus);
+            }
+
             return $this->redirect(['view', 'id' => $model->id]);
         }
+
+
 
         return $this->render('update', [
             'model' => $model,
